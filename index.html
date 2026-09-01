@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>數學教育版：除法直式位值工具</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
+        @import url('https://cdn.jsdelivr.net/gh/max32002/iansui/webfont/Iansui-Regular.css');
+
+        /* 響應式變數設定 */
+        :root {
+            --cell-size: 1.8rem;
+            --font-size: 1.2rem;
+            --symbol-width: 0.8rem;
+            --input-font: 1.1rem;
+        }
+
+        @media (min-width: 640px) {
+            :root {
+                --cell-size: 3rem;
+                --font-size: 1.75rem;
+                --symbol-width: 1.25rem;
+                --input-font: 1.5rem;
+            }
+        }
+
+        body {
+            font-family: 'Iansui', 'Noto Sans TC', sans-serif !important;
+            background-color: #f0fdf4;
+            color: #1f2937;
+            overscroll-behavior-y: none; 
+        }
+
+        .math-paper-container {
+            background-color: white;
+            border: 2px solid #94a3b8;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+        }
+
+        .math-grid {
+            display: grid;
+            gap: 0;
+            margin: 0 auto;
+            width: max-content;
+            background-image: 
+                linear-gradient(#cbd5e1 1px, transparent 1px), 
+                linear-gradient(90deg, #cbd5e1 1px, transparent 1px);
+            background-size: var(--cell-size) var(--cell-size);
+            background-position: top left;
+            border-bottom: 1px solid #cbd5e1;
+            border-right: 1px solid #cbd5e1;
+            user-select: none;
+        }
+
+        .cell {
+            width: var(--cell-size);
+            height: var(--cell-size);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--font-size);
+            font-weight: 700;
+            position: relative;
+            box-sizing: border-box;
+        }
+
+        .symbol-cell {
+            position: relative;
+        }
+        .symbol-cell::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: var(--symbol-width);
+            height: 85%;
+            border-top: 3px solid #111827;
+            border-left: 3px solid #111827;
+            border-top-left-radius: 0.75rem;
+            box-sizing: border-box;
+        }
+
+        .dividend-cell {
+            border-top: 3px solid #111827;
+        }
+
+        .subtraction-line {
+            position: absolute;
+            bottom: 0;
+            left: 0.3rem;
+            right: 0.3rem;
+            border-bottom: 3px solid #111827;
+            z-index: 10;
+        }
+
+        .input-box {
+            background-color: #fef3c7; 
+            border: 2px dashed #f59e0b;
+            border-radius: 0.5rem;
+            outline: none;
+            font-weight: 700;
+            color: #000;
+            transition: all 0.2s;
+            font-size: var(--input-font);
+        }
+        .input-box:focus {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center min-h-screen py-2 sm:py-4 px-1 sm:px-2">
+
+    <main class="max-w-5xl w-full bg-white rounded-xl shadow-xl overflow-hidden" aria-label="除法直式計算機">
+        <!-- 頂部標題與控制列 -->
+        <header class="bg-emerald-600 text-white p-2 sm:p-4">
+            <div class="flex flex-col sm:flex-row flex-wrap justify-center items-center gap-2 sm:gap-3">
+                <h1 class="text-lg sm:text-2xl font-bold whitespace-nowrap mb-1 sm:mb-0 mr-0 sm:mr-2">✏️ 直式計算<span class="hidden sm:inline">機</span></h1>
+                
+                <div class="flex flex-wrap justify-center items-center gap-2" aria-label="輸入區">
+                    <div class="flex items-center bg-emerald-700 rounded-lg p-1 sm:p-1.5 px-2 sm:px-3 shadow-inner">
+                        <label for="div-in" class="mr-1 font-semibold text-xs sm:text-sm whitespace-nowrap">被除數<span class="hidden sm:inline">：</span></label>
+                        <input type="text" inputmode="numeric" id="div-in" value="432" aria-label="輸入被除數" oninput="this.value=this.value.replace(/[^0-9]/g,'');" class="w-12 sm:w-16 text-center text-black rounded px-1 py-0.5 text-sm sm:text-base border-none outline-none focus:ring-2 focus:ring-yellow-400">
+                    </div>
+                    <span class="text-lg sm:text-xl font-bold" aria-hidden="true">÷</span>
+                    <div class="flex items-center bg-emerald-700 rounded-lg p-1 sm:p-1.5 px-2 sm:px-3 shadow-inner">
+                        <label for="sor-in" class="mr-1 font-semibold text-xs sm:text-sm whitespace-nowrap">除數<span class="hidden sm:inline">：</span></label>
+                        <input type="text" inputmode="numeric" id="sor-in" value="3" aria-label="輸入除數" oninput="this.value=this.value.replace(/[^0-9]/g,'');" class="w-8 sm:w-12 text-center text-black rounded px-1 py-0.5 text-sm sm:text-base border-none outline-none focus:ring-2 focus:ring-yellow-400">
+                    </div>
+                </div>
+                
+                <div class="flex flex-wrap justify-center items-center gap-1.5 sm:gap-2 mt-1 sm:mt-0" aria-label="操作按鈕">
+                    <button onclick="start()" class="bg-yellow-400 hover:bg-yellow-300 text-yellow-900 font-bold py-1 sm:py-1.5 px-2 sm:px-4 rounded-lg shadow-md transition transform hover:scale-105 active:scale-95 whitespace-nowrap text-xs sm:text-sm">
+                        開始<span class="hidden sm:inline">計算</span>
+                    </button>
+                    <button onclick="randomQuestion()" class="bg-purple-500 hover:bg-purple-400 text-white font-bold py-1 sm:py-1.5 px-2 sm:px-4 rounded-lg shadow-md transition transform hover:scale-105 active:scale-95 whitespace-nowrap text-xs sm:text-sm">
+                        🎲 隨機<span class="hidden sm:inline">出題</span>
+                    </button>
+                    <button onclick="toggleVoice()" id="voice-btn" class="bg-emerald-800 hover:bg-emerald-900 text-white font-bold py-1 sm:py-1.5 px-2 sm:px-3 rounded-lg shadow-md transition whitespace-nowrap text-xs sm:text-sm">
+                        🔊 <span class="hidden sm:inline">語音</span>開啟
+                    </button>
+                </div>
+                
+                <div class="w-full sm:w-auto flex justify-center mt-1 sm:mt-0">
+                    <label class="flex items-center cursor-pointer bg-emerald-700 p-1 sm:p-1.5 px-2 sm:px-3 rounded-lg shadow-inner text-white transition hover:bg-emerald-800 whitespace-nowrap" title="打勾代表省略商為0的減法步驟">
+                        <input type="checkbox" id="skip-zero-btn" class="mr-1 sm:mr-2 w-4 h-4 accent-yellow-400" checked aria-label="省略商為0的步驟">
+                        <span class="font-semibold text-xs sm:text-sm">[省略/呈現0]</span>
+                    </label>
+                </div>
+            </div>
+        </header>
+
+        <!-- 提示訊息區 -->
+        <section class="p-2 sm:p-4 bg-emerald-50 border-b-4 border-emerald-200" aria-live="polite">
+            <div id="msg-box" class="flex flex-col sm:flex-row items-center sm:items-start gap-2 sm:gap-3 p-2 sm:p-3 px-3 sm:px-4 rounded-lg bg-white shadow-sm border-l-8 border-orange-400">
+                <div class="text-2xl sm:text-3xl hidden sm:block" aria-hidden="true">👩‍🏫</div>
+                <div class="flex-1 flex flex-col sm:flex-row flex-wrap items-center sm:items-baseline gap-1 sm:gap-3 text-center sm:text-left w-full">
+                    <h3 id="step-title" class="text-base sm:text-lg font-bold text-orange-600 whitespace-nowrap">準備就緒</h3>
+                    <div id="msg-text" class="text-sm sm:text-base text-gray-700 font-medium">請輸入題目後，點擊「開始」或「隨機出題」。</div>
+                </div>
+                <div id="check-btn-container" class="hidden w-full sm:w-auto mt-1 sm:mt-0 flex justify-center">
+                     <button onclick="checkLogic()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1.5 sm:py-1.5 px-6 sm:px-4 rounded-lg shadow-md transition whitespace-nowrap text-sm w-full sm:w-auto">
+                        送出<span class="hidden sm:inline"> (Enter)</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 運算紙張區 -->
+        <section class="p-2 sm:p-4 flex justify-center bg-gray-50">
+            <div class="math-paper-container w-full sm:w-auto flex justify-center overflow-x-auto">
+                <div id="paper" class="math-grid relative" aria-label="動態直式計算網格">
+                    <!-- 動態生成的直式網格會在這裡 -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+
+</body>
+</html>
